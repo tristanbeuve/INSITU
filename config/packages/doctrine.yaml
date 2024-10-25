@@ -1,5 +1,8 @@
 doctrine:
     dbal:
+        driver: 'pdo_mysql'
+        server_version: '9.1'  # ou votre version MySQL/MariaDB actuelle
+        charset: utf8          # Remplace utf8mb4 par utf8
         url: '%env(resolve:DATABASE_URL)%'
 
         # IMPORTANT: You MUST configure your server version,
