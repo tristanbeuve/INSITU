@@ -1,5 +1,5 @@
 # Utilise une image de base PHP avec FPM (FastCGI Process Manager)
-FROM php:8.2-fpm
+FROM php:8.3-fpm
 
 # Installer les dépendances système et PHP
 RUN apt-get update && apt-get install -y \
