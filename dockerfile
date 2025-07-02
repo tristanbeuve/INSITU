@@ -8,7 +8,20 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     libzip-dev \
     zip \
+    libcurl4-openssl-dev \
+    pkg-config \
+    libssl-dev \
+    gcc \
+    make \
+    autoconf \
+    libc-dev \
     && docker-php-ext-install intl pdo pdo_mysql zip opcache
+
+# Installer les extensions PECL pour MongoDB et Redis
+RUN pecl install mongodb \
+    && pecl install redis \
+    && docker-php-ext-enable mongodb redis
+
 
 # Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

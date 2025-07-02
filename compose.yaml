@@ -1,29 +1,3 @@
-#
-#services:
-####> doctrine/doctrine-bundle ###
-#  database:
-#    image: postgres:${POSTGRES_VERSION:-16}-alpine
-#    environment:
-#      POSTGRES_DB: ${POSTGRES_DB:-app}
-#      # You should definitely change the password in production
-#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-#      POSTGRES_USER: ${POSTGRES_USER:-app}
-#    healthcheck:
-#      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-app}", "-U", "${POSTGRES_USER:-app}"]
-#      timeout: 5s
-#      retries: 5
-#      start_period: 60s
-#    volumes:
-#      - database_data:/var/lib/postgresql/data:rw
-#      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-#      # - ./docker/db/data:/var/lib/postgresql/data:rw
-####< doctrine/doctrine-bundle ###
-#
-#volumes:
-####> doctrine/doctrine-bundle ###
-#  database_data:
-####< doctrine/doctrine-bundle ###
-
 version: '3.8'
 
 services:
@@ -33,13 +7,18 @@ services:
       dockerfile: Dockerfile
     container_name: symfony_app
     volumes:
-      - .:/var/www/symfony                 # Monte le code source pour le développement
-      - symfony_cache:/var/www/symfony/var  # Volume pour les fichiers de cache Symfony
+      - .:/var/www/symfony
+      - symfony_cache:/var/www/symfony/var
     environment:
-      DATABASE_URL: mysql://root:Not24get@localhost:3306/insituBDD?serverVersion=8.0.37
+      DATABASE_URL: mysql://root:Not24get@mysql:3306/insituBDD?serverVersion=8.0.37
+      MONGODB_URL: mongodb://app:Not24get@mongodb:27017/?authSource=InsituBDD
+      MONGODB_DB: InsituBDD
+      REDIS_URL: redis://redis:6379
       APP_ENV: dev
     depends_on:
       - mysql
+      - mongodb
+      - redis
     networks:
       - symfony_network
 
@@ -53,9 +32,35 @@ services:
       MYSQL_USER: app
       MYSQL_PASSWORD: Not24get
     ports:
-      - "3307:3306"       # Pour accéder à MySQL depuis l'hôte
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - symfony_network
+
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: InsituBDD
+      MONGO_INITDB_ROOT_USERNAME: app
+      MONGO_INITDB_ROOT_PASSWORD: Not24get
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - symfony_network
+
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
     networks:
       - symfony_network
 
@@ -63,10 +68,10 @@ services:
     image: nginx:latest
     container_name: nginx
     ports:
-      - "8080:80"       # Expose le port 80 du conteneur sur le port 8080 de l'hôte
+      - "8080:80"
     volumes:
-      - .:/var/www/symfony           # Monte le code source
-      - ./nginx.conf:/etc/nginx/nginx.conf  # Fichier de configuration Nginx
+      - .:/var/www/symfony
+      - ./nginx.conf:/etc/nginx/nginx.conf
     depends_on:
       - symfony
     networks:
@@ -75,8 +80,9 @@ services:
 volumes:
   mysql_data:
   symfony_cache:
+  mongodb_data:
+  redis_data:
 
 networks:
   symfony_network:
     driver: bridge
-
