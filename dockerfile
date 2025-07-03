@@ -26,13 +26,13 @@ RUN pecl install mongodb \
 # Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Définir le répertoire de travail dans le conteneur
+# Cloner ton repo dans /var/www/symfony
+RUN git clone https://$GITHUB_TOKEN@github.com/tristanbeuve/INSITU.git /var/www/symfony
+
+# Se placer dans le dossier de ton app
 WORKDIR /var/www/symfony
 
-# Copier le code du projet dans le conteneur
-COPY . .
-
-# Installer les dépendances du projet Symfony
+# Installer les dépendances
 RUN composer install --no-scripts --no-interaction
 
 # Donner les permissions adéquates
